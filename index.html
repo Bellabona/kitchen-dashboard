@@ -589,8 +589,8 @@
     <div class="container">
         <!-- Header -->
         <header>
-            <h1>ð½ï¸ BellaBona Kitchen Analytics</h1>
-            <div class="subtitle">Berlin â¢ Live Dashboard</div>
+            <h1>🍽️ BellaBona Kitchen Analytics</h1>
+            <div class="subtitle">Berlin • Live Dashboard</div>
             <div class="live-indicator">
                 <div class="live-dot"></div>
                 <span>Live Data Feed</span>
@@ -612,7 +612,7 @@
                 <input type="date" id="toDate" placeholder="To">
                 <button id="applyCustom">Apply</button>
             </div>
-            <button class="refresh-btn" id="refreshBtn">ð Refresh Data</button>
+            <button class="refresh-btn" id="refreshBtn">🔄 Refresh Data</button>
         </div>
 
         <!-- Main Content -->
@@ -626,7 +626,7 @@
 
     <!-- Footer -->
     <footer>
-        Data source: BellaBona Assembly Tracking â¢ Auto-refreshes on page load
+        Data source: BellaBona Assembly Tracking • Auto-refreshes on page load
     </footer>
 
     <script>
@@ -723,12 +723,14 @@
             if (rows.length < 2) return [];
 
             const headers = rows[0];
-            const letterIdx = headers.indexOf('Letter');
-            const nameIdx = headers.indexOf('Dish Name');
-            const ratingIdx = headers.indexOf('Avg Rating');
-            const tasteIdx = headers.indexOf('Avg Taste');
-            const countIdx = headers.indexOf('Ratings');
-            const goodIdx = headers.indexOf('Good %');
+            // Find columns by partial match (header may contain extra text like week info)
+            const findCol = (keyword) => headers.findIndex(h => h.toLowerCase().includes(keyword.toLowerCase()));
+            const letterIdx = findCol('Letter');
+            const nameIdx = findCol('Dish Name');
+            const ratingIdx = findCol('Avg Rating');
+            const tasteIdx = findCol('Avg Taste');
+            const countIdx = findCol('Ratings');
+            const goodIdx = findCol('Good %');
 
             const data = [];
             for (let i = 1; i < rows.length; i++) {
@@ -903,12 +905,12 @@
 
                 // Trend calculation (assuming last week vs previous week)
                 const dateArray = Object.keys(data.dates).sort();
-                let trend = 'â';
+                let trend = '→';
                 if (dateArray.length >= 14) {
                     const lastWeek = dateArray.slice(-7).reduce((sum, d) => sum + data.dates[d], 0);
                     const prevWeek = dateArray.slice(-14, -7).reduce((sum, d) => sum + data.dates[d], 0);
-                    if (lastWeek > prevWeek * 1.1) trend = 'â';
-                    else if (lastWeek < prevWeek * 0.9) trend = 'â';
+                    if (lastWeek > prevWeek * 1.1) trend = '↑';
+                    else if (lastWeek < prevWeek * 0.9) trend = '↓';
                 }
 
                 leaderboard.push({
@@ -928,7 +930,7 @@
                 <div class="content-grid">
                     <!-- Quality Scores -->
                     <div class="card">
-                        <h2>â­ Quality Score</h2>
+                        <h2>⭐ Quality Score</h2>
                         <div class="quality-container">
                             <div class="quality-gauge">
                                 ${renderQualityGauge(qualityScores)}
@@ -947,13 +949,13 @@
 
                 <!-- Leaderboard -->
                 <div class="card">
-                    <h2>ð Dish Leaderboard</h2>
+                    <h2>🏆 Dish Leaderboard</h2>
                     ${renderLeaderboard(leaderboard)}
                 </div>
 
                 <div class="charts-grid">
                     <div class="chart-card">
-                        <h3>ð Daily Volume Trend</h3>
+                        <h3>📊 Daily Volume Trend</h3>
                         <div class="chart-container">
                             <canvas id="trendChart"></canvas>
                         </div>
@@ -1007,7 +1009,7 @@
         function renderCharts(qualityScores, leaderboard) {
             return `
                 <div class="chart-card">
-                    <h3>ð Volume Distribution (Top 10)</h3>
+                    <h3>📈 Volume Distribution (Top 10)</h3>
                     <div class="chart-container">
                         <canvas id="volumeChart"></canvas>
                     </div>
@@ -1016,13 +1018,13 @@
         }
 
         function renderLeaderboard(leaderboard) {
-            const medals = ['ð¥', 'ð¥', 'ð¥'];
+            const medals = ['🥇', '🥈', '🥉'];
             const maxVolume = leaderboard[0]?.volume || 1;
 
             const rows = leaderboard.map((item, idx) => {
                 const medal = idx < 3 ? medals[idx] : (idx + 1);
                 const barWidth = (item.volume / maxVolume) * 100;
-                const trendClass = item.trend === 'â' ? 'up' : item.trend === 'â' ? 'down' : 'steady';
+                const trendClass = item.trend === '↑' ? 'up' : item.trend === '↓' ? 'down' : 'steady';
 
                 return `
                     <tr>
@@ -1206,12 +1208,12 @@
         function showError(msg) {
             document.getElementById('content').innerHTML = `
                 <div class="error">
-                    <h3>â ï¸ Error Loading Data</h3>
+                    <h3>⚠️ Error Loading Data</h3>
                     <div class="error-details">
                         ${msg}<br><br>
                         <strong>Make sure the Google Sheet is shared as 'Anyone with the link can view'</strong>
                     </div>
-                    <button class="error-btn" onclick="location.reload()">ð Retry</button>
+                    <button class="error-btn" onclick="location.reload()">🔄 Retry</button>
                 </div>
             `;
         }
