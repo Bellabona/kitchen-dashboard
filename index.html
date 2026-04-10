@@ -631,6 +631,7 @@
 
     <script>
         const SHEET_ID = '1cLzfmY04J7RDsZsuLSh2qz_f-b9m8eyrj-BPY5AhHo0';
+        const DISH_NAMES = {A:"B&B Butter Chicken with Rice & Naan",B:"Cordon Bleu with Green Beans",C:"B&B Butter Tofu",D:"Thai Coconut curry with Vegan Chicken",E:"Phanaeng Chicken curry",F:"Chicken in champignon sauce with Spatzle",G:"Vegan Madras Kofta",H:"Vegetables Tikka Masala",I:"Peaches Omelette Salad",J:"Lasagna Bolognese with Seasonal Veggies",K:"High-Protein Thai Peanut Bowl",L:"Frijoles Chicken Boost",M:"Spinach Ricotta Tortellini",N:"Garden Green Salad with Chicken",O:"Japanese vegan noodles bowl",P:"The Ultimate Vegan Bowl",Q:"Soleil de Saumon",R:"Low Carb Doener-Teller",S:"Spicy Tuna Poke Bowl",T:"Spicy Chicken Pizza Sandwich",U:"Zucchini Falafel Wrap",V:"Avocado Egg Sandwich",W:"Korean BBQ Pulled Pork Burger",X:"Osaka Gyoza Bowl",Y:"Thai chicken salad",Z:"Mediterranean Cruise"};
         let assemblyData = [];
         let dishRatingsData = [];
         let dateRange = { start: null, end: null };
@@ -780,7 +781,7 @@
 
         // Date Range Logic
         function applyDateRange(rangeKey) {
-            const today = new Date('2026-04-10');
+            const today = new Date();
             let start, end;
 
             if (rangeKey === 'this-week') {
@@ -808,6 +809,7 @@
             dateRange = { start, end, key: rangeKey };
             filterAssemblyData();
             updateButtonStates(rangeKey);
+            render();
         }
 
         function filterAssemblyData() {
@@ -873,7 +875,7 @@
                     satisfaction: Math.round(satisfactionScore),
                     sentiment: Math.round(sentimentScore),
                     count: rating.count,
-                    name: rating.name
+                    name: rating.name || DISH_NAMES[rating.letter] || rating.letter
                 };
             }
 
@@ -907,7 +909,7 @@
             const leaderboard = [];
             for (const [letter, data] of Object.entries(dishVolumes)) {
                 const rating = allDishRatingsData.find(r => r.letter === letter);
-                const name = rating ? rating.name : `Dish ${letter}`;
+                const name = (rating && rating.name) ? rating.name : (DISH_NAMES[letter] || `Dish ${letter}`);
                 const days = data.days.size;
                 const avgPerDay = days > 0 ? Math.round(data.volume / days) : 0;
                 const topEmployee = Object.entries(data.employees).sort((a, b) => b[1] - a[1])[0];
@@ -932,6 +934,12 @@
         }
 
         // Render
+        function getDateRangeLabel() {
+            if (!dateRange.start) return "All Time";
+            const fmt = d => d.toLocaleDateString("en-GB", {day:"numeric",month:"short",year:"numeric"});
+            return fmt(dateRange.start) + " to " + fmt(dateRange.end);
+        }
+
         function render() {
             const qualityScores = computeQualityScores();
             const leaderboard = computeLeaderboard();
@@ -941,6 +949,7 @@
                     <!-- Quality Scores -->
                     <div class="card">
                         <h2>⭐ Quality Score</h2>
+                    <div style="font-size:12px;color:#8888aa;margin-top:-8px;margin-bottom:8px;">${getDateRangeLabel()}</div>
                         <div class="quality-container">
                             <div class="quality-gauge">
                                 ${renderQualityGauge(qualityScores)}
