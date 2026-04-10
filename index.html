@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BellaBona Kitchen Analytics Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f0f1a;
+            color: #f0f0f0;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #e2a832 0%, #c4891e 100%);
+            padding: 40px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(226, 168, 50, 0.15);
+        }
+
+        header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: #0f0f1a;
+        }
+
+        header .subtitle {
+            font-size: 14px;
+            color: rgba(15, 15, 26, 0.7);
+            font-weight: 500;
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: rgba(15, 15, 26, 0.8);
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #4ecca3;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Controls */
+        .controls-section {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .date-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: 1px solid #2a2a4a;
+            border-radius: 6px;
+            background: #2a2a4a;
+            color: #f0f0f0;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        button:hover {
+            background: #3a3a5a;
+            border-color: #e2a832;
+        }
+
+        button.active {
+            background: #e2a832;
+            border-color: #e2a832;
+            color: #0f0f1a;
+        }
+
+        .custom-date-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="date"] {
+            padding: 8px 12px;
+            border: 1px solid #2a2a4a;
+            border-radius: 6px;
+            background: #2a2a4a;
+            color: #f0f0f0;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+        }
+
+        input[type="date"]:focus {
+            outline: none;
+            border-color: #e2a832;
+            background: #3a3a5a;
+        }
+
+        .refresh-btn {
+            padding: 8px 16px;
+            background: #e2a832;
+            color: #0f0f1a;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #d49820;
+            transform: scale(1.05);
+        }
+
+        /* Main Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #e2a832;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Quality Score Section */
+        .quality-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 768px) {
+            .quality-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .quality-gauge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .gauge-circle {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: 700;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .gauge-circle.excellent {
+            background: conic-gradient(#4ecca3 0deg 288deg, #2a2a4a 288deg 360deg);
+            color: #4ecca3;
+        }
+
+        .gauge-circle.good {
+            background: conic-gradient(#e2a832 0deg 288deg, #2a2a4a 288deg 360deg);
+            color: #e2a832;
+        }
+
+        .gauge-circle.fair {
+            background: conic-gradient(#e24832 0deg 288deg, #2a2a4a 288deg 360deg);
+            color: #e24832;
+        }
+
+        .gauge-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .quality-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .score-item {
+            background: #2a2a4a;
+            padding: 12px;
+            border-radius: 8px;
+            display: grid;
+            grid-template-columns: 1fr 60px;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .score-item-name {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #8888aa;
+        }
+
+        .score-item-value {
+            text-align: right;
+            font-weight: 600;
+            font-size: 16px;
+            color: #e2a832;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #3a3a5a;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e2a832, #c4891e);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        .quality-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .quality-item {
+            background: #2a2a4a;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #e2a832;
+            display: grid;
+            grid-template-columns: 30px 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .quality-item-score {
+            text-align: center;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 4px 8px;
+            background: #3a3a5a;
+            border-radius: 4px;
+        }
+
+        .quality-item-name {
+            font-weight: 600;
+            color: #f0f0f0;
+        }
+
+        .quality-item-count {
+            font-size: 12px;
+            color: #8888aa;
+        }
+
+        .quality-item.excellent {
+            border-left-color: #4ecca3;
+        }
+
+        .quality-item.excellent .quality-item-score {
+            color: #4ecca3;
+        }
+
+        .quality-item.good {
+            border-left-color: #e2a832;
+        }
+
+        .quality-item.good .quality-item-score {
+            color: #e2a832;
+        }
+
+        .quality-item.fair {
+            border-left-color: #e24832;
+        }
+
+        .quality-item.fair .quality-item-score {
+            color: #e24832;
+        }
+
+        /* Leaderboard */
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .leaderboard-table thead tr {
+            border-bottom: 2px solid #2a2a4a;
+        }
+
+        .leaderboard-table th {
+            text-align: left;
+            padding: 12px;
+            font-weight: 600;
+            color: #e2a832;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        .leaderboard-table tbody tr {
+            border-bottom: 1px solid #2a2a4a;
+            transition: background 0.2s ease;
+        }
+
+        .leaderboard-table tbody tr:hover {
+            background: #2a2a4a;
+        }
+
+        .leaderboard-table td {
+            padding: 12px;
+        }
+
+        .rank-badge {
+            font-size: 16px;
+            font-weight: 700;
+            min-width: 30px;
+        }
+
+        .dish-name {
+            font-weight: 600;
+            color: #f0f0f0;
+        }
+
+        .dish-letter {
+            display: inline-block;
+            background: #e2a832;
+            color: #0f0f1a;
+            font-weight: 700;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            font-size: 14px;
+        }
+
+        .volume-bar-container {
+            width: 100%;
+            height: 24px;
+            background: #2a2a4a;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .volume-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4ecca3, #2ecc71);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 11px;
+            transition: width 0.3s ease;
+        }
+
+        .trend {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .trend.up { color: #4ecca3; }
+        .trend.down { color: #e24832; }
+        .trend.steady { color: #8888aa; }
+
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .chart-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #e2a832;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            gap: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #2a2a4a;
+            border-top-color: #e2a832;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error State */
+        .error {
+            background: #2a1a1a;
+            border: 1px solid #e24832;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            color: #f0f0f0;
+        }
+
+        .error h3 {
+            color: #e24832;
+            margin-bottom: 10px;
+        }
+
+        .error-details {
+            color: #8888aa;
+            font-size: 13px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .error-btn {
+            background: #e24832;
+            border-color: #e24832;
+            color: #fff;
+            margin-top: 10px;
+        }
+
+        .error-btn:hover {
+            background: #c9351f;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            border-top: 1px solid #2a2a4a;
+            color: #8888aa;
+            font-size: 12px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .controls-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .custom-date-inputs {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .custom-date-inputs input,
+            .custom-date-inputs button {
+                width: 100%;
+            }
+
+            header h1 {
+                font-size: 24px;
+            }
+
+            .quality-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #2a2a4a;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3a3a5a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>ð½ï¸ BellaBona Kitchen Analytics</h1>
+            <div class="subtitle">Berlin â¢ Live Dashboard</div>
+            <div class="live-indicator">
+                <div class="live-dot"></div>
+                <span>Live Data Feed</span>
+            </div>
+        </header>
+
+        <!-- Controls -->
+        <div class="controls-section">
+            <div class="date-buttons">
+                <button class="date-btn" data-range="this-week">This Week</button>
+                <button class="date-btn" data-range="last-week">Last Week</button>
+                <button class="date-btn" data-range="this-month">This Month</button>
+                <button class="date-btn" data-range="last-month">Last Month</button>
+                <button class="date-btn active" data-range="all-time">All Time</button>
+            </div>
+            <div class="custom-date-inputs">
+                <input type="date" id="fromDate" placeholder="From">
+                <span style="color: #8888aa;">to</span>
+                <input type="date" id="toDate" placeholder="To">
+                <button id="applyCustom">Apply</button>
+            </div>
+            <button class="refresh-btn" id="refreshBtn">ð Refresh Data</button>
+        </div>
+
+        <!-- Main Content -->
+        <div id="content">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading dashboard data...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        Data source: BellaBona Assembly Tracking â¢ Auto-refreshes on page load
+    </footer>
+
+    <script>
+        const SHEET_ID = '1cLzfmY04J7RDsZsuLSh2qz_f-b9m8eyrj-BPY5AhHo0';
+        let assemblyData = [];
+        let dishRatingsData = [];
+        let dateRange = { start: null, end: null };
+        let allAssemblyData = [];
+        let allDishRatingsData = [];
+
+        // CSV Parser
+        function parseCSV(text) {
+            const rows = [];
+            let row = [];
+            let field = '';
+            let inQuotes = false;
+            for (let i = 0; i < text.length; i++) {
+                const c = text[i];
+                if (inQuotes) {
+                    if (c === '"') {
+                        if (text[i+1] === '"') { field += '"'; i++; }
+                        else inQuotes = false;
+                    } else {
+                        field += c;
+                    }
+                } else {
+                    if (c === '"') inQuotes = true;
+                    else if (c === ',') { row.push(field.trim()); field = ''; }
+                    else if (c === '\n') { row.push(field.trim()); if (row.length > 1) rows.push(row); row = []; field = ''; }
+                    else if (c !== '\r') field += c;
+                }
+            }
+            if (field || row.length) { row.push(field.trim()); if (row.length > 1) rows.push(row); }
+            return rows;
+        }
+
+        // Fetch Sheet
+        async function fetchSheet(tabName) {
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}&tq=${encodeURIComponent('SELECT *')}`;
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error('Failed to fetch ' + tabName);
+            return await resp.text();
+        }
+
+        // Parse Assembly Log
+        function parseAssemblyLog(text) {
+            const rows = parseCSV(text);
+            if (rows.length < 2) return [];
+
+            const headers = rows[0];
+            const dateIdx = headers.indexOf('Date');
+            const employeeIdx = headers.indexOf('Employee');
+            const dishesIdx = headers.indexOf('Dishes');
+            const commentIdx = headers.indexOf('Comment');
+
+            const data = [];
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const date = row[dateIdx] || '';
+                const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                if (!dateRegex.test(date)) continue;
+
+                const employee = row[employeeIdx] || '';
+                const dishesStr = row[dishesIdx] || '';
+                const comment = row[commentIdx] || '';
+
+                const dishes = {};
+                const dishPairs = dishesStr.split('|');
+                for (const pair of dishPairs) {
+                    const [letter, qtyStr] = pair.split(':').map(s => s.trim());
+                    if (letter && qtyStr) {
+                        dishes[letter] = parseInt(qtyStr) || 0;
+                    }
+                }
+
+                const employees = employee.split(',').map(e => e.trim()).filter(e => e);
+                const numEmployees = employees.length || 1;
+
+                data.push({
+                    date,
+                    employees,
+                    dishes,
+                    numEmployees,
+                    comment,
+                    rawComment: comment.toLowerCase()
+                });
+            }
+            return data;
+        }
+
+        // Parse Dish Ratings
+        function parseDishRatings(text) {
+            const rows = parseCSV(text);
+            if (rows.length < 2) return [];
+
+            const headers = rows[0];
+            const letterIdx = headers.indexOf('Letter');
+            const nameIdx = headers.indexOf('Dish Name');
+            const ratingIdx = headers.indexOf('Avg Rating');
+            const tasteIdx = headers.indexOf('Avg Taste');
+            const countIdx = headers.indexOf('Ratings');
+            const goodIdx = headers.indexOf('Good %');
+
+            const data = [];
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const letter = row[letterIdx] || '';
+                const name = row[nameIdx] || '';
+                const rating = parseFloat(row[ratingIdx]) || 0;
+                const taste = parseFloat(row[tasteIdx]) || 0;
+                const count = parseInt(row[countIdx]) || 0;
+                const goodStr = row[goodIdx] || '0%';
+                const good = parseInt(goodStr) || 0;
+
+                if (letter) {
+                    data.push({ letter, name, rating, taste, count, good });
+                }
+            }
+            return data;
+        }
+
+        // Load Data
+        async function loadData() {
+            try {
+                const [assemblyText, ratingsText] = await Promise.all([
+                    fetchSheet('Assembly Log'),
+                    fetchSheet('Dish Ratings')
+                ]);
+
+                allAssemblyData = parseAssemblyLog(assemblyText);
+                allDishRatingsData = parseDishRatings(ratingsText);
+
+                applyDateRange('all-time');
+                render();
+            } catch (err) {
+                showError(err.message);
+            }
+        }
+
+        // Date Range Logic
+        function applyDateRange(rangeKey) {
+            const today = new Date('2026-04-10');
+            let start, end;
+
+            if (rangeKey === 'this-week') {
+                // Apr 7-11, 2026 (assuming today is Thursday, Apr 10)
+                start = new Date('2026-04-07');
+                end = new Date('2026-04-11');
+            } else if (rangeKey === 'last-week') {
+                // Mar 30 - Apr 4
+                start = new Date('2026-03-30');
+                end = new Date('2026-04-04');
+            } else if (rangeKey === 'this-month') {
+                // Apr 2026
+                start = new Date('2026-04-01');
+                end = new Date('2026-04-30');
+            } else if (rangeKey === 'last-month') {
+                // Mar 2026
+                start = new Date('2026-03-01');
+                end = new Date('2026-03-31');
+            } else {
+                // All time
+                start = null;
+                end = null;
+            }
+
+            dateRange = { start, end, key: rangeKey };
+            filterAssemblyData();
+            updateButtonStates(rangeKey);
+        }
+
+        function filterAssemblyData() {
+            if (!dateRange.start) {
+                assemblyData = allAssemblyData;
+                return;
+            }
+
+            assemblyData = allAssemblyData.filter(row => {
+                const rowDate = new Date(row.date);
+                return rowDate >= dateRange.start && rowDate <= dateRange.end;
+            });
+        }
+
+        function updateButtonStates(activeKey) {
+            document.querySelectorAll('.date-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.range === activeKey);
+            });
+        }
+
+        // Sentiment Analysis
+        function analyzeSentiment(comment, letter) {
+            const positive = ['good', 'great', 'perfect', 'fresh', 'well', 'nice', 'excellent', 'smooth', 'best'];
+            const negative = ['hard', 'overcooked', 'over cooked', 'not good', 'bad', 'shortage', 'not fresh', 'burnt', 'raw', 'wrong', 'missing', 'issue', 'problem'];
+
+            let posCount = 0, negCount = 0;
+            for (const word of positive) {
+                if (comment.includes(word)) posCount++;
+            }
+            for (const word of negative) {
+                if (comment.includes(word)) negCount++;
+            }
+
+            if (posCount === 0 && negCount === 0) return 50;
+            return (posCount / (posCount + negCount)) * 100;
+        }
+
+        // Compute Quality Scores
+        function computeQualityScores() {
+            const scores = {};
+
+            for (const rating of allDishRatingsData) {
+                const letter = rating.letter;
+                const ratingScore = (rating.rating / 10) * 100;
+                const tasteScore = (rating.taste / 10) * 100;
+                const satisfactionScore = rating.good;
+
+                // Comment sentiment
+                let sentiments = [];
+                for (const entry of assemblyData) {
+                    if (entry.dishes[letter] && entry.comment) {
+                        sentiments.push(analyzeSentiment(entry.rawComment, letter));
+                    }
+                }
+                const sentimentScore = sentiments.length > 0 ? sentiments.reduce((a, b) => a + b, 0) / sentiments.length : 50;
+
+                const composite = ratingScore * 0.4 + tasteScore * 0.3 + satisfactionScore * 0.2 + sentimentScore * 0.1;
+
+                scores[letter] = {
+                    composite: Math.round(composite),
+                    rating: Math.round(ratingScore),
+                    taste: Math.round(tasteScore),
+                    satisfaction: Math.round(satisfactionScore),
+                    sentiment: Math.round(sentimentScore),
+                    count: rating.count,
+                    name: rating.name
+                };
+            }
+
+            return scores;
+        }
+
+        // Compute Leaderboard
+        function computeLeaderboard() {
+            const dishVolumes = {};
+
+            for (const entry of assemblyData) {
+                const date = entry.date;
+                for (const [letter, qty] of Object.entries(entry.dishes)) {
+                    if (!dishVolumes[letter]) {
+                        dishVolumes[letter] = { volume: 0, days: new Set(), employees: {}, dates: {} };
+                    }
+                    dishVolumes[letter].volume += qty;
+                    dishVolumes[letter].days.add(date);
+
+                    for (const emp of entry.employees) {
+                        const per = qty / entry.numEmployees;
+                        dishVolumes[letter].employees[emp] = (dishVolumes[letter].employees[emp] || 0) + per;
+                    }
+                    if (!dishVolumes[letter].dates[date]) {
+                        dishVolumes[letter].dates[date] = 0;
+                    }
+                    dishVolumes[letter].dates[date] += qty;
+                }
+            }
+
+            const leaderboard = [];
+            for (const [letter, data] of Object.entries(dishVolumes)) {
+                const rating = allDishRatingsData.find(r => r.letter === letter);
+                const name = rating ? rating.name : 'Unknown';
+                const days = data.days.size;
+                const avgPerDay = days > 0 ? Math.round(data.volume / days) : 0;
+                const topEmployee = Object.entries(data.employees).sort((a, b) => b[1] - a[1])[0];
+                const topEmpName = topEmployee ? topEmployee[0] : '-';
+
+                // Trend calculation (assuming last week vs previous week)
+                const dateArray = Object.keys(data.dates).sort();
+                let trend = 'â';
+                if (dateArray.length >= 14) {
+                    const lastWeek = dateArray.slice(-7).reduce((sum, d) => sum + data.dates[d], 0);
+                    const prevWeek = dateArray.slice(-14, -7).reduce((sum, d) => sum + data.dates[d], 0);
+                    if (lastWeek > prevWeek * 1.1) trend = 'â';
+                    else if (lastWeek < prevWeek * 0.9) trend = 'â';
+                }
+
+                leaderboard.push({
+                    letter, name, volume: data.volume, days, avgPerDay, topEmpName, trend
+                });
+            }
+
+            return leaderboard.sort((a, b) => b.volume - a.volume);
+        }
+
+        // Render
+        function render() {
+            const qualityScores = computeQualityScores();
+            const leaderboard = computeLeaderboard();
+
+            let html = `
+                <div class="content-grid">
+                    <!-- Quality Scores -->
+                    <div class="card">
+                        <h2>â­ Quality Score</h2>
+                        <div class="quality-container">
+                            <div class="quality-gauge">
+                                ${renderQualityGauge(qualityScores)}
+                            </div>
+                            <div class="quality-list">
+                                ${renderQualityList(qualityScores)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div>
+                        ${renderCharts(qualityScores, leaderboard)}
+                    </div>
+                </div>
+
+                <!-- Leaderboard -->
+                <div class="card">
+                    <h2>ð Dish Leaderboard</h2>
+                    ${renderLeaderboard(leaderboard)}
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>ð Daily Volume Trend</h3>
+                        <div class="chart-container">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('content').innerHTML = html;
+
+            // Render Chart.js charts
+            setTimeout(() => {
+                renderVolumeDistributionChart(leaderboard);
+                renderScoreOverviewChart(qualityScores);
+                renderTrendChart(leaderboard);
+            }, 100);
+        }
+
+        function renderQualityGauge(scores) {
+            const sorted = Object.values(scores).sort((a, b) => b.composite - a.composite);
+            const avgScore = Math.round(sorted.reduce((s, q) => s + q.composite, 0) / sorted.length);
+            const className = avgScore >= 80 ? 'excellent' : avgScore >= 60 ? 'good' : 'fair';
+
+            return `
+                <div class="gauge-circle ${className}">${avgScore}</div>
+                <div class="gauge-label">${className === 'excellent' ? 'Excellent' : className === 'good' ? 'Good' : 'Fair'}</div>
+                <div style="font-size: 12px; color: #8888aa; text-align: center;">
+                    ${sorted.length} dishes tracked
+                </div>
+            `;
+        }
+
+        function renderQualityList(scores) {
+            const sorted = Object.entries(scores)
+                .sort((a, b) => b[1].composite - a[1].composite)
+                .slice(0, 8);
+
+            return sorted.map(([letter, score]) => {
+                const className = score.composite >= 80 ? 'excellent' : score.composite >= 60 ? 'good' : 'fair';
+                return `
+                    <div class="quality-item ${className}">
+                        <div class="quality-item-score">${score.composite}</div>
+                        <div>
+                            <div class="quality-item-name">${letter}: ${score.name}</div>
+                            <div class="quality-item-count">${score.count} ratings</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderCharts(qualityScores, leaderboard) {
+            return `
+                <div class="chart-card">
+                    <h3>ð Volume Distribution (Top 10)</h3>
+                    <div class="chart-container">
+                        <canvas id="volumeChart"></canvas>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderLeaderboard(leaderboard) {
+            const medals = ['ð¥', 'ð¥', 'ð¥'];
+            const maxVolume = leaderboard[0]?.volume || 1;
+
+            const rows = leaderboard.map((item, idx) => {
+                const medal = idx < 3 ? medals[idx] : (idx + 1);
+                const barWidth = (item.volume / maxVolume) * 100;
+                const trendClass = item.trend === 'â' ? 'up' : item.trend === 'â' ? 'down' : 'steady';
+
+                return `
+                    <tr>
+                        <td class="rank-badge">${medal}</td>
+                        <td><span class="dish-letter">${item.letter}</span><span class="dish-name">${item.name}</span></td>
+                        <td>
+                            <div class="volume-bar-container">
+                                <div class="volume-bar" style="width: ${barWidth}%">${item.volume}</div>
+                            </div>
+                        </td>
+                        <td style="text-align: center; color: #8888aa;">${item.avgPerDay}/day</td>
+                        <td style="color: #8888aa;">${item.topEmpName}</td>
+                        <td class="trend ${trendClass}">${item.trend}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            return `
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Dish</th>
+                            <th>Total Volume</th>
+                            <th>Avg/Day</th>
+                            <th>Top Assembler</th>
+                            <th>Trend</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function renderVolumeDistributionChart(leaderboard) {
+            const top10 = leaderboard.slice(0, 10);
+            const ctx = document.getElementById('volumeChart');
+            if (!ctx) return;
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: top10.map(item => `${item.letter}: ${item.name}`),
+                    datasets: [{
+                        data: top10.map(item => item.volume),
+                        backgroundColor: [
+                            '#4ecca3', '#2ecc71', '#27ae60', '#16a085', '#1abc9c',
+                            '#3498db', '#2980b9', '#9b59b6', '#8e44ad', '#e74c3c'
+                        ],
+                        borderColor: '#1a1a2e',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#8888aa',
+                                font: { family: "'Inter', sans-serif", size: 11 },
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderScoreOverviewChart(qualityScores) {
+            const sorted = Object.entries(qualityScores)
+                .sort((a, b) => b[1].composite - a[1].composite)
+                .slice(0, 10);
+
+            const ctx = document.getElementById('scoreChart');
+            if (!ctx) return;
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sorted.map(([letter]) => letter),
+                    datasets: [{
+                        label: 'Quality Score',
+                        data: sorted.map(([, score]) => score.composite),
+                        backgroundColor: sorted.map(([, score]) =>
+                            score.composite >= 80 ? '#4ecca3' : score.composite >= 60 ? '#e2a832' : '#e24832'
+                        ),
+                        borderColor: '#2a2a4a',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            min: 0,
+                            max: 100,
+                            grid: { color: '#2a2a4a' },
+                            ticks: { color: '#8888aa', font: { family: "'Inter', sans-serif" } }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#8888aa', font: { family: "'Inter', sans-serif", weight: 600 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderTrendChart(leaderboard) {
+            const top5 = leaderboard.slice(0, 5);
+            const allDates = new Set();
+            const dataByDish = {};
+
+            for (const entry of assemblyData) {
+                allDates.add(entry.date);
+            }
+
+            const dates = Array.from(allDates).sort();
+
+            for (const item of top5) {
+                dataByDish[item.letter] = {};
+                for (const date of dates) {
+                    dataByDish[item.letter][date] = 0;
+                }
+            }
+
+            for (const entry of assemblyData) {
+                for (const [letter, qty] of Object.entries(entry.dishes)) {
+                    if (dataByDish[letter]) {
+                        dataByDish[letter][entry.date] += qty;
+                    }
+                }
+            }
+
+            const colors = ['#4ecca3', '#3498db', '#e2a832', '#e74c3c', '#9b59b6'];
+            const datasets = top5.map((item, idx) => ({
+                label: `${item.letter}: ${item.name}`,
+                data: dates.map(d => dataByDish[item.letter][d]),
+                borderColor: colors[idx],
+                backgroundColor: colors[idx] + '20',
+                tension: 0.3,
+                fill: true
+            }));
+
+            const ctx = document.getElementById('trendChart');
+            if (!ctx) return;
+
+            new Chart(ctx, {
+                type: 'line',
+                data: { labels: dates, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#8888aa', font: { family: "'Inter', sans-serif", size: 11 } }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: '#2a2a4a' },
+                            ticks: { color: '#8888aa', font: { family: "'Inter', sans-serif" } }
+                        },
+                        x: {
+                            grid: { color: '#2a2a4a' },
+                            ticks: { color: '#8888aa', font: { family: "'Inter', sans-serif" } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function showError(msg) {
+            document.getElementById('content').innerHTML = `
+                <div class="error">
+                    <h3>â ï¸ Error Loading Data</h3>
+                    <div class="error-details">
+                        ${msg}<br><br>
+                        <strong>Make sure the Google Sheet is shared as 'Anyone with the link can view'</strong>
+                    </div>
+                    <button class="error-btn" onclick="location.reload()">ð Retry</button>
+                </div>
+            `;
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.date-btn').forEach(btn => {
+                btn.addEventListener('click', () => applyDateRange(btn.dataset.range));
+            });
+
+            document.getElementById('applyCustom').addEventListener('click', () => {
+                const from = document.getElementById('fromDate').value;
+                const to = document.getElementById('toDate').value;
+                if (from && to) {
+                    dateRange = {
+                        start: new Date(from),
+                        end: new Date(to),
+                        key: 'custom'
+                    };
+                    filterAssemblyData();
+                    updateButtonStates('custom');
+                    render();
+                }
+            });
+
+            document.getElementById('refreshBtn').addEventListener('click', loadData);
+
+            loadData();
+        });
+    </script>
+</body>
+</html>
