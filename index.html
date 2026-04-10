@@ -724,7 +724,17 @@
 
             const headers = rows[0];
             // Find columns by partial match (header may contain extra text like week info)
-            const findCol = (keyword) => headers.findIndex(h => h.toLowerCase().includes(keyword.toLowerCase()));
+            const findCol = (keyword) => {
+                const kw = keyword.toLowerCase();
+                // Exact match first
+                const exact = headers.findIndex(h => h.toLowerCase().trim() === kw);
+                if (exact !== -1) return exact;
+                // Then try "starts with" to avoid false matches
+                const starts = headers.findIndex(h => h.toLowerCase().trim().startsWith(kw));
+                if (starts !== -1) return starts;
+                // Finally partial match
+                return headers.findIndex(h => h.toLowerCase().includes(kw));
+            };
             const letterIdx = findCol('Letter');
             const nameIdx = findCol('Dish Name');
             const ratingIdx = findCol('Avg Rating');
@@ -897,7 +907,7 @@
             const leaderboard = [];
             for (const [letter, data] of Object.entries(dishVolumes)) {
                 const rating = allDishRatingsData.find(r => r.letter === letter);
-                const name = rating ? rating.name : 'Unknown';
+                const name = rating ? rating.name : `Dish ${letter}`;
                 const days = data.days.size;
                 const avgPerDay = days > 0 ? Math.round(data.volume / days) : 0;
                 const topEmployee = Object.entries(data.employees).sort((a, b) => b[1] - a[1])[0];
